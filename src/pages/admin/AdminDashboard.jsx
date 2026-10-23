@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCMS } from "../../context/CMSContext";
 import { formatDate } from "../../utils/formatters";
@@ -10,11 +11,17 @@ import {
   ArrowRight,
   Clock,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Database,
+  RefreshCw,
+  Server,
+  HardDrive
 } from "lucide-react";
 
 export default function AdminDashboard() {
-  const { quotes, posts, categories, media, adSettings } = useCMS();
+  const { quotes, posts, categories, media, adSettings, dbStatus, refreshData, syncToMongoDB } = useCMS();
+  const [syncing, setSyncing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Metrics calculation
   const newQuotes = quotes.filter((q) => q.status === "New").length;
@@ -26,6 +33,23 @@ export default function AdminDashboard() {
   const scheduledPosts = posts.filter((p) => p.status === "scheduled").length;
 
   const recentQuotes = quotes.slice(0, 5);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshData();
+    setTimeout(() => setRefreshing(false), 500);
+  };
+
+  const handleSync = async () => {
+    try {
+      setSyncing(true);
+      await syncToMongoDB();
+    } catch {
+      // toast handled in context
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const statsCards = [
     {
@@ -59,6 +83,8 @@ export default function AdminDashboard() {
     }
   ];
 
+  const isDbConnected = Boolean(dbStatus?.connected);
+
   return (
     <div>
       {/* Header */}
@@ -69,6 +95,92 @@ export default function AdminDashboard() {
         <p style={{ color: "#94a3b8", fontSize: "0.95rem" }}>
           Manage your client service pipeline, technical publications, media assets, and monetization settings.
         </p>
+      </div>
+
+      {/* Database Connectivity Console */}
+      <div
+        style={{
+          background: isDbConnected ? "rgba(16, 185, 129, 0.08)" : "rgba(245, 158, 11, 0.08)",
+          border: `1px solid ${isDbConnected ? "rgba(16, 185, 129, 0.3)" : "rgba(245, 158, 11, 0.3)"}`,
+          borderRadius: "12px",
+          padding: "20px 24px",
+          marginBottom: "32px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "18px"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div
+            style={{
+              width: "44px",
+              height: "44px",
+              borderRadius: "10px",
+              background: isDbConnected ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)",
+              border: `1px solid ${isDbConnected ? "rgba(16, 185, 129, 0.3)" : "rgba(245, 158, 11, 0.3)"}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: isDbConnected ? "#10b981" : "#f59e0b"
+            }}
+          >
+            <Database size={22} />
+          </div>
+
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <span style={{ fontSize: "1rem", fontWeight: 700, color: "#ffffff" }}>
+                MongoDB Database Connectivity
+              </span>
+              <span
+                style={{
+                  fontSize: "0.75rem",
+                  fontFamily: "var(--font-mono)",
+                  padding: "2px 8px",
+                  borderRadius: "999px",
+                  background: isDbConnected ? "rgba(16, 185, 129, 0.2)" : "rgba(245, 158, 11, 0.2)",
+                  color: isDbConnected ? "#10b981" : "#f59e0b",
+                  border: `1px solid ${isDbConnected ? "rgba(16, 185, 129, 0.4)" : "rgba(245, 158, 11, 0.4)"}`
+                }}
+              >
+                ● {isDbConnected ? "ONLINE · CONNECTED" : "OFFLINE / LOCAL STORAGE CACHE ACTIVE"}
+              </span>
+            </div>
+
+            <div style={{ fontSize: "0.825rem", color: "#94a3b8" }}>
+              Engine: <strong style={{ color: "#ffffff" }}>Mongoose + MongoDB</strong> | Target: <code style={{ color: "#00f2fe" }}>{dbStatus?.uri || "mongodb://127.0.0.1:27017/abhijit_portfolio"}</code>
+              {dbStatus?.counts && (
+                <span> | Live Documents: {dbStatus.counts.quotes} quotes, {dbStatus.counts.posts} posts, {dbStatus.counts.media} media</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="btn btn-outline btn-sm"
+            style={{ fontSize: "0.8rem", gap: "6px" }}
+          >
+            <RefreshCw size={14} className={refreshing ? "spin-pulse" : ""} />
+            <span>Test Connection</span>
+          </button>
+
+          {isDbConnected && (
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="btn btn-primary btn-sm"
+              style={{ fontSize: "0.8rem", gap: "6px" }}
+            >
+              <HardDrive size={14} />
+              <span>{syncing ? "Syncing..." : "Sync Local Data to MongoDB"}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Summary KPI Cards Grid */}

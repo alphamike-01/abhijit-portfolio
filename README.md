@@ -154,20 +154,38 @@ This platform is engineered using modern, modular React 19 and Vite 7, featuring
 ## 3. Getting Started
 
 ### Prerequisites
-- Node.js 18+ or 20+
+- Node.js 18+, 20+, or 24+
 - npm 9+ or pnpm
+- MongoDB (Local `mongodb://127.0.0.1:27017` or MongoDB Atlas cloud cluster)
 
-### Installation
+### Installation & Launch
+
 ```bash
 # 1. Clone repository
 git clone https://github.com/alphamike-01/abhijit-portfolio.git
 cd abhijit-portfolio
 
-# 2. Install dependencies
+# 2. Install frontend dependencies
 npm install
 
-# 3. Create local environment configuration
-cp .env.example .env
+# 3. Install backend server dependencies
+cd server && npm install && cd ..
+
+# 4. Start the MongoDB Express Backend API (Port 5000)
+npm run server
+
+# 5. Start the Vite React Frontend (Port 5173) in a new terminal
+npm run dev
+
+# Optional: Seed initial database collections
+npm run seed
+```
+
+### Database & Storage Architecture
+- **Engine:** MongoDB via Mongoose ODM.
+- **Connection Configuration:** Set `MONGODB_URI` in `server/.env` (supports `mongodb://127.0.0.1:27017/abhijit_portfolio` or `mongodb+srv://...` for MongoDB Atlas).
+- **Graceful Fallback:** If MongoDB is offline, the platform automatically falls back to the client-side local cache without breaking or crashing.
+- **Sync Feature:** The admin dashboard includes a one-click *"Sync Local Data to MongoDB"* button to push existing local records directly into MongoDB.
 
 # 4. Start local development server
 npm run dev
