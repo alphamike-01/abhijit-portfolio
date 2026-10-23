@@ -1,15 +1,106 @@
-import {useEffect,useState} from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { ThemeProvider } from "./context/ThemeContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { CMSProvider } from "./context/CMSContext";
 
-const skills={"Languages":["Python","C","Java","C++"],"Security tools":["Nmap","Burp Suite","Gobuster","Hydra","Metasploit","Wireshark"],"Platforms & systems":["Linux","Windows","Android Studio"],"Domains":["Computer Networks","DBMS","ADBMS","Network Security","Penetration Testing","Machine Learning Security"]};
-const projects=[
-["ML-Based Malware Classifier Web Application","XGBoost-based malware classification pipeline using the EMBER dataset for static PE file analysis, with a Next.js frontend and FastAPI backend.","ML / SECURITY"],
-["Resilience-Oriented Multilayer Cybersecurity Framework","Research work on an integrated cybersecurity framework for tactical operations and resilient tactical communication environments.","RESEARCH"],
-["Linux Forensics Engine","A Linux-focused forensic utility project for collecting and presenting system evidence during investigations.","FORENSICS"],
-["Municipality Complaint Management System","Complaint registration and management application developed for Vadodara Hackathon 6.0.","HACKATHON"],
-["Hospital Management System","Python and MongoDB based management application.","SOFTWARE"],
-["Obstacle Detection Robot & Smart Blind Stick","Arduino-based assistive and obstacle-detection projects using ultrasonic sensing.","HARDWARE"]];
-const experience=[['2026','Cybersecurity Job Internship Trainee','Jyestha Corporate Entity, in association with E-Cell IIT Roorkee','Completed a 6-month structured training program covering core cybersecurity concepts and practical skills.'],['2026','Virtual Job Simulations','Deloitte & Accenture — via Forage','Completed virtual job simulations covering cybersecurity, data analytics, and technology consulting workflows.']];
-const education=[['2025–2027','M.Sc. Information Technology','Cyber Security and Forensics · Parul University'],['2021–2024','B.Sc. (Honours) Computer Science','Kazi Nazrul University · CGPA: 7.89'],['2018–2021','Higher Secondary (PCM + CS)','DAV Model School, CBSE · 85%']];
-const creds=["Google Certified Cyber Security","National Cadet Corps (NCC) 'C' Certificate — Alpha Grading","Ranked in the top 4% of users on TryHackMe","Project featured in a daily newspaper","Languages: English (Fluent), Bengali (Fluent), Hindi (Fluent)"];
-function Radar(){return <svg className="radar" viewBox="0 0 300 300" role="img" aria-label="Security skill radar"><circle className="radar-ring r1" cx="150" cy="150" r="72"/><circle className="radar-ring r2" cx="150" cy="150" r="51"/><circle className="radar-ring r3" cx="150" cy="150" r="30"/><g className="radar-sweep"><path d="M150,150 L150,78 A72,72 0 0,1 200,105 Z" fill="var(--teal)" opacity=".18"/><line x1="150" y1="150" x2="150" y2="78" stroke="var(--teal)" strokeWidth="1.4"/></g>{[['150','60','NETWORK','n1'],['242','150','PENTEST','n2'],['150','240','ML SEC','n3'],['58','150','FORENSICS','n4']].map(([x,y,label,c])=><g key={label}><line className={'radar-link '+c.replace('n','l')} x1="150" y1="150" x2={x} y2={y}/><circle className={'radar-node '+c} cx={x} cy={y} r="4" fill="var(--amber)"/><text className={'radar-label radar-node '+c} x={x} y={y==='150'?(x==='242'?'153':'153'):(y==='60'?'46':'256')} textAnchor="middle">{label}</text></g>)}</svg>}
-function App(){const[active,setActive]=useState('summary');useEffect(()=>{const els=[...document.querySelectorAll('section[id]')];const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)setActive(e.target.id)}),{rootMargin:'-20% 0px -70% 0px'});els.forEach(e=>obs.observe(e));return()=>obs.disconnect()},[]);const nav=['summary','skills','projects','experience','education','credentials'];return <><header className="hero"><div className="hero-inner"><div><div className="hero-tag mono">FIELD REPORT // SUBJECT 001 // 2026</div><h1 className="hero-name">Abhijit Mondal</h1><p className="hero-role">Cyber security professional working across network security, penetration testing, and machine learning-based security tooling.</p><div className="hero-contact mono"><span>Durgapur, WB, India</span><a href="mailto:abhijitmondaljaihind@gmail.com">abhijitmondaljaihind@gmail.com</a><a href="tel:+918116077241">+91 81160 77241</a><a href="https://github.com/alphamike-01" target="_blank" rel="noreferrer">github.com/alphamike-01</a><a href="https://linkedin.com/in/abhijit-mondal-79309426a" target="_blank" rel="noreferrer">linkedin</a></div></div><div className="radar-wrap"><Radar/><div className="hero-photo"><img src="/ncc-photo.jpg" alt="NCC certificate photograph"/></div></div></div></header><div className="shell"><aside className="rail"><div className="rail-track">{nav.map(n=><a key={n} data-nav href={'#'+n} className={'rail-item '+(active===n?'active':'')}>{n.toUpperCase()}</a>)}</div></aside><main><section id="summary"><div className="sec-marker"><h2>Summary</h2></div><p className="lede">Cyber security professional with hands-on experience in network security, penetration testing, and machine learning-based security tooling.</p><p className="lede">Skilled in Python, C, Java, and C++, with practical exposure to Nmap, Burp Suite, Metasploit, Wireshark, and Gobuster.</p></section><section id="skills"><div className="sec-marker"><h2>Skills</h2></div><div className="skill-grid">{Object.entries(skills).map(([cat,items])=><div key={cat}><div className="skill-cat mono">{cat}</div><div className="chip-row">{items.map(x=><span className="chip" key={x}>{x}</span>)}</div></div>)}</div></section><section id="projects"><div className="sec-marker"><h2>Projects &amp; research</h2></div>{projects.map(([name,desc,tag])=><article className="proj" key={name}><div className="proj-top"><h3 className="proj-name">{name}</h3><span className="proj-tag mono">{tag}</span></div><p className="proj-desc">{desc}</p></article>)}</section><section id="experience"><div className="sec-marker"><h2>Experience</h2></div>{experience.map(([date,title,org,desc])=><div className="log-item" key={title}><div className="log-date mono">{date}</div><div><h3 className="log-title">{title}</h3><p className="log-org">{org}</p><p className="log-desc">{desc}</p></div></div>)}</section><section id="education"><div className="sec-marker"><h2>Education</h2></div>{education.map(([date,title,desc])=><div className="log-item" key={title}><div className="log-date mono">{date}</div><div><h3 className="log-title">{title}</h3><p className="log-org">{desc}</p></div></div>)}</section><section id="credentials"><div className="sec-marker"><h2>Credentials &amp; achievements</h2></div><div className="cred-block"><div><div className="cred-photo"><img src="/ncc-photo.jpg" alt="NCC photograph"/></div><div className="cred-photo-cap mono">NCC 'C'</div></div><ul className="cred-list">{creds.map(x=><li key={x}><span className="cred-mark mono">＋</span>{x}</li>)}</ul></div></section></main></div><footer><span>Abhijit Mondal — Durgapur, West Bengal, India</span><span className="mono">LOG CLOSED // 2026</span></footer></>};export default App;
+// Layout
+import Layout from "./components/layout/Layout";
+
+// Public Pages
+import Home from "./pages/Home";
+import ServicesPage from "./pages/services/ServicesPage";
+import ServiceDetailPage from "./pages/services/ServiceDetailPage";
+import ProjectsPage from "./pages/projects/ProjectsPage";
+import AboutPage from "./pages/about/AboutPage";
+import QuotePage from "./pages/quote/QuotePage";
+import BlogPage from "./pages/blog/BlogPage";
+import BlogPostPage from "./pages/blog/BlogPostPage";
+import NotFound from "./pages/NotFound";
+
+// Legal Pages
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import TermsOfService from "./pages/legal/TermsOfService";
+import CookiePolicy from "./pages/legal/CookiePolicy";
+import Disclaimer from "./pages/legal/Disclaimer";
+
+// Admin Pages
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminQuotes from "./pages/admin/AdminQuotes";
+import AdminBlog from "./pages/admin/AdminBlog";
+import AdminBlogEditor from "./pages/admin/AdminBlogEditor";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminMedia from "./pages/admin/AdminMedia";
+import AdminAdSense from "./pages/admin/AdminAdSense";
+
+// Scroll to top on route change
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
+// Protected Route Guard for Admin Panel
+function ProtectedAdminRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return <Navigate to="/admin/login" replace />;
+  }
+  return children;
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <CMSProvider>
+          <ScrollToTop />
+          <Routes>
+            {/* Public Client & Publishing Routes */}
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="services" element={<ServicesPage />} />
+              <Route path="services/:slug" element={<ServiceDetailPage />} />
+              <Route path="projects" element={<ProjectsPage />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="quote" element={<QuotePage />} />
+              <Route path="blog" element={<BlogPage />} />
+              <Route path="blog/:slug" element={<BlogPostPage />} />
+              <Route path="privacy" element={<PrivacyPolicy />} />
+              <Route path="terms" element={<TermsOfService />} />
+              <Route path="cookies" element={<CookiePolicy />} />
+              <Route path="disclaimer" element={<Disclaimer />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+
+            {/* Admin Authentication */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+
+            {/* Protected Admin CMS Dashboard */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedAdminRoute>
+                  <AdminLayout />
+                </ProtectedAdminRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="quotes" element={<AdminQuotes />} />
+              <Route path="blog" element={<AdminBlog />} />
+              <Route path="blog/new" element={<AdminBlogEditor />} />
+              <Route path="blog/edit/:id" element={<AdminBlogEditor />} />
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="media" element={<AdminMedia />} />
+              <Route path="adsense" element={<AdminAdSense />} />
+            </Route>
+          </Routes>
+        </CMSProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}

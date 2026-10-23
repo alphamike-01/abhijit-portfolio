@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B13"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg3)"/>
+  <circle cx="900" cy="250" r="320" fill="#F59E0B" opacity="0.05"/>
+  <g opacity="0.08" stroke="#F59E0B" stroke-width="1">
+    <path d="M100 0v630M300 0v630M500 0v630M700 0v630M900 0v630M1100 0v630"/>
+    <path d="M0 120h1200M0 240h1200M0 360h1200M0 480h1200"/>
+  </g>
+  <rect x="100" y="120" width="280" height="36" rx="18" fill="rgba(245, 158, 11, 0.1)" stroke="#F59E0B" stroke-width="1"/>
+  <text x="240" y="143" fill="#F59E0B" font-family="monospace" font-size="14" font-weight="600" text-anchor="middle" letter-spacing="1.5">APPLICATION SECURITY // API</text>
+  <text x="100" y="230" fill="#FFFFFF" font-family="sans-serif" font-size="48" font-weight="800" letter-spacing="-1">OWASP API Security Top 10</text>
+  <text x="100" y="295" fill="#A0AEC0" font-family="sans-serif" font-size="32" font-weight="500">BOLA, BFLA &amp; SSRF Mitigation Playbook</text>
+  <rect x="100" y="370" width="660" height="160" rx="10" fill="rgba(15, 23, 42, 0.8)" stroke="rgba(245, 158, 11, 0.3)" stroke-width="1"/>
+  <text x="130" y="415" fill="#F59E0B" font-family="monospace" font-size="16">&gt; API1:2023 Broken Object Level Authorization (BOLA)</text>
+  <text x="130" y="450" fill="#10B981" font-family="monospace" font-size="16">&gt; policy.enforce(user.tenant_id == resource.tenant_id)</text>
+  <text x="130" y="485" fill="#A0AEC0" font-family="monospace" font-size="15">[SECURE] Zero Trust scoped attribute-based access control</text>
+</svg>

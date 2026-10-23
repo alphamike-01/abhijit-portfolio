@@ -1,0 +1,5 @@
+# Google AdSense Authorized Digital Sellers (ads.txt)
+# Replace with your verified Publisher ID once approved by Google AdSense
+# Example: google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+# Configure this file via the Admin Dashboard > Monetization Settings
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

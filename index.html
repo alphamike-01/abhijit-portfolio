@@ -1,2 +1,57 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Abhijit's Professional Summary</title></head><body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Abhijit Mondal — Software Engineering, AI & Cybersecurity Specialist</title>
+    <meta
+      name="description"
+      content="Portfolio, engineering services, and technical publications of Abhijit Mondal — specializing in Full-Stack Web & Mobile Development, Machine Learning Systems, and Authorized Cybersecurity Assessments."
+    />
+    <meta name="author" content="Abhijit Mondal" />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:site_name" content="Abhijit Mondal Portfolio & Services" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Abhijit Mondal — Software Engineering, AI & Cybersecurity Specialist" />
+    <meta
+      property="og:description"
+      content="Engineering digital products, building intelligent systems, and securing modern web and mobile applications."
+    />
+    <meta property="og:image" content="/ncc-photo.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Abhijit Mondal — Engineering & Security" />
+    <meta name="twitter:description" content="Engineering digital products, building intelligent systems, and securing applications." />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23080C14'/><path d='M25 75 L50 25 L75 75 M37 55 L63 55' stroke='%2300F2FE' stroke-width='8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Clean up any stale service workers or caches from other localhost projects (e.g. WavePlay)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (var registration of registrations) {
+            registration.unregister();
+            console.log('Unregistered stale service worker:', registration.scope);
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (var name of names) {
+            if (name.includes('waveplay') || name.includes('workbox')) {
+              caches.delete(name);
+              console.log('Cleared stale cache:', name);
+            }
+          }
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
