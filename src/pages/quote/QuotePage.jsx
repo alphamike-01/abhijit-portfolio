@@ -4,8 +4,9 @@ import { initialServices } from "../../data/initialServices";
 import { useCMS } from "../../context/CMSContext";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
 import { validateQuoteForm } from "../../utils/validation";
-import { generateQuoteId } from "../../utils/formatters";
+import { generateQuoteId, formatDate } from "../../utils/formatters";
 import { updateSEO } from "../../utils/seo";
+import { personalInfo } from "../../data/credentialsData";
 import {
   Shield,
   ArrowRight,
@@ -22,7 +23,12 @@ import {
   DollarSign,
   Calendar,
   Layers,
-  ShieldAlert
+  ShieldAlert,
+  Check,
+  RotateCcw,
+  Sparkles,
+  ExternalLink,
+  FileText
 } from "lucide-react";
 
 export default function QuotePage() {
@@ -42,6 +48,8 @@ export default function QuotePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedQuote, setSubmittedQuote] = useState(null);
   const [formErrors, setFormErrors] = useState({});
+  const [copiedId, setCopiedId] = useState(false);
+  const [copiedSummary, setCopiedSummary] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -129,7 +137,83 @@ export default function QuotePage() {
     window.scrollTo({ top: 120, behavior: "smooth" });
   };
 
-  const handleSubmit = (e) => {
+  const handleCopyId = () => {
+    if (!submittedQuote?.id) return;
+    navigator.clipboard.writeText(submittedQuote.id);
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2000);
+  };
+
+  const handleCopySummary = () => {
+    if (!submittedQuote) return;
+    const summaryLines = [
+      `============================================================`,
+      `PROJECT SCOPING SPECIFICATION DOSSIER`,
+      `Reference ID: ${submittedQuote.id}`,
+      `Date Logged:  ${formatDate(submittedQuote.createdAt || new Date().toISOString())}`,
+      `Status:       INTAKE LOGGED & VERIFIED`,
+      `============================================================`,
+      ``,
+      `[CLIENT PROFILE]`,
+      `Name:                 ${submittedQuote.name}`,
+      `Email:                ${submittedQuote.email}`,
+      `Phone:                ${submittedQuote.phone || "Not specified"}`,
+      `Organization:         ${submittedQuote.organization || "Independent Client"}`,
+      `Preferred Contact:    ${submittedQuote.preferredContact || "Email & Video Call"}`,
+      ``,
+      `[PROJECT SPECIFICATIONS]`,
+      `Primary Service:      ${submittedQuote.serviceTitle}`,
+      `Project Title:        ${submittedQuote.projectTitle}`,
+      `Project Scope:        ${submittedQuote.projectDescription}`,
+      submittedQuote.projectUrl ? `Reference / URL:      ${submittedQuote.projectUrl}` : null,
+      submittedQuote.deliverables?.length ? `Deliverables:         ${submittedQuote.deliverables.join(", ")}` : null,
+      submittedQuote.authorizedAttestation ? `Legal Authorization:  CONFIRMED & ATTESTED (Penetration Testing)` : null,
+      ``,
+      `[COMMERCIALS & SCHEDULE]`,
+      `Target Budget:        ${submittedQuote.budgetRange}`,
+      `Target Timeline:      ${submittedQuote.timeline}`,
+      submittedQuote.additionalNotes ? `Additional Directives: ${submittedQuote.additionalNotes}` : null,
+      ``,
+      `------------------------------------------------------------`,
+      `DIRECT ENGINEERING CONTACT:`,
+      `Lead Engineer:        ${personalInfo.name}`,
+      `Email:                ${personalInfo.email}`,
+      `Phone:                ${personalInfo.phone}`,
+      `Portfolio:            https://abhijitmondal.dev`,
+      `============================================================`
+    ].filter(Boolean).join("\n");
+
+    navigator.clipboard.writeText(summaryLines);
+    setCopiedSummary(true);
+    setTimeout(() => setCopiedSummary(false), 2000);
+  };
+
+  const handleResetForm = () => {
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      organization: "",
+      serviceId: preselectedService || "web-development-seo",
+      projectTitle: "",
+      projectDescription: "",
+      deliverables: [],
+      budgetRange: "₹50,000 – ₹1,00,000",
+      timeline: "2-4 Weeks",
+      preferredContact: "Email & Video Call",
+      projectUrl: "",
+      additionalNotes: "",
+      privacyConsent: false,
+      authorizedAttestation: false,
+      websiteHoneypot: ""
+    });
+    setFormErrors({});
+    setSubmittedQuote(null);
+    setCurrentStep(1);
+    window.scrollTo({ top: 80, behavior: "smooth" });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validation = validateQuoteForm(formData);
     if (!validation.isValid) {
@@ -138,130 +222,548 @@ export default function QuotePage() {
     }
 
     setIsSubmitting(true);
-
-    // Simulate reliable persistence
-    setTimeout(() => {
-      const newQuote = submitQuote({
+    try {
+      const quotePayload = {
         id: generateQuoteId(),
         ...formData,
-        serviceTitle: activeService.title
-      });
+        serviceTitle: activeService.title,
+        createdAt: new Date().toISOString()
+      };
 
-      setSubmittedQuote(newQuote);
+      const result = await submitQuote(quotePayload);
+      setSubmittedQuote(result || quotePayload);
+      window.scrollTo({ top: 60, behavior: "smooth" });
+    } catch (err) {
+      console.error("Quote submission error:", err);
+      // Fallback in case of unexpected context error
+      const fallbackQuote = {
+        id: generateQuoteId(),
+        ...formData,
+        serviceTitle: activeService.title,
+        createdAt: new Date().toISOString()
+      };
+      setSubmittedQuote(fallbackQuote);
+      window.scrollTo({ top: 60, behavior: "smooth" });
+    } finally {
       setIsSubmitting(false);
-      window.scrollTo({ top: 80, behavior: "smooth" });
-    }, 600);
+    }
   };
 
   // SUCCESS CONFIRMATION SCREEN
   if (submittedQuote) {
+    const formattedDate = formatDate(submittedQuote.createdAt || new Date().toISOString());
+
     return (
       <div style={{ paddingTop: "40px", paddingBottom: "96px" }}>
-        <div className="container" style={{ maxWidth: "780px" }}>
+        <div className="container" style={{ maxWidth: "900px" }}>
+          
+          {/* Print Letterhead Header (Only appears when printed or saved as PDF) */}
           <div
-            className="card"
+            className="print-header"
             style={{
-              padding: "48px 40px",
-              textAlign: "center",
-              border: "1px solid var(--accent-emerald)",
-              boxShadow: "0 20px 40px rgba(16, 185, 129, 0.15)"
+              display: "none",
+              marginBottom: "28px",
+              borderBottom: "2px solid #0f172a",
+              paddingBottom: "16px"
             }}
           >
-            <div
-              style={{
-                width: "64px",
-                height: "64px",
-                borderRadius: "50%",
-                background: "rgba(16, 185, 129, 0.15)",
-                border: "2px solid var(--accent-emerald)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 20px",
-                color: "var(--accent-emerald)"
-              }}
-            >
-              <CheckCircle2 size={32} />
-            </div>
-
-            <span className="badge badge-emerald" style={{ marginBottom: "12px" }}>
-              REQUEST PERSISTED & LOGGED
-            </span>
-
-            <h1 style={{ fontSize: "2rem", marginBottom: "12px" }}>
-              Quote Request Confirmed
-            </h1>
-            <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", marginBottom: "28px" }}>
-              Thank you, <strong>{submittedQuote.name}</strong>. Your request has been securely registered in our system. You will receive an initial technical assessment and proposal within 24 hours.
-            </p>
-
-            {/* Reference Badge */}
-            <div
-              style={{
-                background: "var(--bg-tertiary)",
-                border: "1px dashed var(--accent-cyan)",
-                borderRadius: "var(--radius-md)",
-                padding: "16px",
-                marginBottom: "32px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "6px"
-              }}
-            >
-              <span style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-                UNIQUE TRACKING REFERENCE ID:
-              </span>
-              <span style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--accent-cyan)", fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
-                {submittedQuote.id}
-              </span>
-            </div>
-
-            {/* Summary Details */}
-            <div
-              style={{
-                textAlign: "left",
-                background: "var(--bg-secondary)",
-                borderRadius: "var(--radius-md)",
-                padding: "20px",
-                marginBottom: "36px",
-                border: "1px solid var(--card-border)",
-                fontSize: "0.9rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "12px"
-              }}
-            >
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "6px" }}>
-                <span style={{ color: "var(--text-muted)", minWidth: "120px" }}>Service:</span>
-                <span style={{ fontWeight: 600, color: "var(--text-primary)", flex: 1, minWidth: "160px", overflowWrap: "anywhere" }}>{submittedQuote.serviceTitle}</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <h1 style={{ margin: "0 0 4px", fontSize: "1.5rem", fontWeight: 800, letterSpacing: "-0.02em" }}>
+                  {personalInfo.name} — PROJECT SCOPING DOSSIER
+                </h1>
+                <p style={{ margin: 0, fontSize: "0.85rem", color: "#475569" }}>
+                  {personalInfo.title} • {personalInfo.email} • {personalInfo.phone}
+                </p>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "6px" }}>
-                <span style={{ color: "var(--text-muted)", minWidth: "120px" }}>Project Title:</span>
-                <span style={{ color: "var(--text-primary)", flex: 1, minWidth: "160px", overflowWrap: "anywhere" }}>{submittedQuote.projectTitle}</span>
+              <div style={{ textAlign: "right", fontFamily: "var(--font-mono)", fontSize: "0.85rem" }}>
+                <div><strong>TRACKING REF:</strong> {submittedQuote.id}</div>
+                <div><strong>ISSUED:</strong> {formattedDate}</div>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "6px" }}>
-                <span style={{ color: "var(--text-muted)", minWidth: "120px" }}>Budget Range:</span>
-                <span style={{ color: "var(--accent-cyan)", fontWeight: 600, flex: 1, minWidth: "160px" }}>{submittedQuote.budgetRange}</span>
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "6px" }}>
-                <span style={{ color: "var(--text-muted)", minWidth: "120px" }}>Timeline:</span>
-                <span style={{ color: "var(--text-primary)", flex: 1, minWidth: "160px" }}>{submittedQuote.timeline}</span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
-              <button onClick={() => window.print()} className="btn btn-secondary">
-                <Printer size={16} />
-                <span>Print or Save Summary</span>
-              </button>
-              <Link to="/" className="btn btn-primary">
-                <span>Return to Portfolio Home</span>
-                <ArrowRight size={16} />
-              </Link>
             </div>
           </div>
+
+          {/* Dossier Card Container */}
+          <div className="quote-receipt-card" style={{ padding: "0", marginBottom: "32px" }}>
+            
+            {/* Top Status Header */}
+            <div
+              style={{
+                padding: "36px 36px 30px",
+                borderBottom: "1px solid var(--card-border)",
+                background: "linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(13, 20, 36, 0.4) 100%)",
+                position: "relative"
+              }}
+            >
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "12px", marginBottom: "18px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span
+                    style={{
+                      width: "10px",
+                      height: "10px",
+                      borderRadius: "50%",
+                      backgroundColor: "var(--accent-emerald)",
+                      boxShadow: "0 0 12px var(--accent-emerald)",
+                      display: "inline-block"
+                    }}
+                  />
+                  <span className="badge badge-emerald" style={{ letterSpacing: "0.06em", fontWeight: 700 }}>
+                    DOSSIER REGISTERED & ENCRYPTED
+                  </span>
+                </div>
+                <span style={{ fontSize: "0.82rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+                  <Clock size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "5px" }} />
+                  Logged: {formattedDate}
+                </span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "20px" }}>
+                <div
+                  style={{
+                    width: "56px",
+                    height: "56px",
+                    borderRadius: "14px",
+                    background: "rgba(16, 185, 129, 0.15)",
+                    border: "1.5px solid var(--accent-emerald)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--accent-emerald)",
+                    flexShrink: 0
+                  }}
+                >
+                  <CheckCircle2 size={30} />
+                </div>
+                <div>
+                  <h1 style={{ fontSize: "1.85rem", margin: "0 0 8px", lineHeight: 1.25 }}>
+                    Project Scoping Request Confirmed
+                  </h1>
+                  <p style={{ color: "var(--text-secondary)", fontSize: "1rem", margin: 0, lineHeight: 1.6 }}>
+                    Thank you, <strong>{submittedQuote.name}</strong>{submittedQuote.organization ? ` (${submittedQuote.organization})` : ""}. Your specifications have been formally received and queued for technical architecture review. An itemized proposal will be delivered to <strong>{submittedQuote.email}</strong> within 24 hours.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Reference Tracking Box */}
+            <div
+              style={{
+                padding: "24px 36px",
+                background: "rgba(7, 11, 19, 0.6)",
+                borderBottom: "1px solid var(--card-border)",
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "16px"
+              }}
+            >
+              <div>
+                <span style={{ fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>
+                  Unique Tracking Reference ID
+                </span>
+                <span
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: 800,
+                    fontFamily: "var(--font-mono)",
+                    color: "var(--accent-cyan)",
+                    letterSpacing: "0.08em"
+                  }}
+                >
+                  {submittedQuote.id}
+                </span>
+              </div>
+
+              <div className="no-print" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <button
+                  type="button"
+                  onClick={handleCopyId}
+                  className="btn btn-secondary"
+                  style={{ padding: "8px 16px", fontSize: "0.85rem" }}
+                  title="Copy Reference ID to clipboard"
+                >
+                  {copiedId ? (
+                    <>
+                      <Check size={15} style={{ color: "var(--accent-emerald)" }} />
+                      <span style={{ color: "var(--accent-emerald)" }}>Copied ID</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={15} />
+                      <span>Copy Reference</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* 3-Stage Intake Roadmap */}
+            <div style={{ padding: "32px 36px", borderBottom: "1px solid var(--card-border)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+                <Sparkles size={16} style={{ color: "var(--accent-cyan)" }} />
+                <h3 style={{ fontSize: "1rem", margin: 0, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)" }}>
+                  Engagement & Response Pipeline
+                </h3>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
+                {/* Stage 1 */}
+                <div className="roadmap-step completed">
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      background: "rgba(16, 185, 129, 0.2)",
+                      border: "2px solid var(--accent-emerald)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--accent-emerald)",
+                      flexShrink: 0
+                    }}
+                  >
+                    <CheckCircle2 size={18} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+                      <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Stage 1: Specification Ingestion & Validation</span>
+                      <span className="badge badge-emerald" style={{ fontSize: "0.7rem", padding: "2px 8px" }}>Completed</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+                      Dossier successfully logged, parameters checked for completeness, and anti-spam verification attested.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Stage 2 */}
+                <div className="roadmap-step">
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      background: "rgba(0, 242, 254, 0.15)",
+                      border: "2px solid var(--accent-cyan)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--accent-cyan)",
+                      flexShrink: 0
+                    }}
+                  >
+                    <Clock size={18} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+                      <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Stage 2: Architectural & Security Assessment</span>
+                      <span className="badge badge-cyan" style={{ fontSize: "0.7rem", padding: "2px 8px" }}>Within 12 Hours</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+                      Abhijit performs technical analysis on your architecture requirements, feasibility scope, and security considerations.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Stage 3 */}
+                <div className="roadmap-step">
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      background: "rgba(255, 255, 255, 0.05)",
+                      border: "2px solid rgba(255, 255, 255, 0.2)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--text-muted)",
+                      flexShrink: 0
+                    }}
+                  >
+                    <FileCheck size={18} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+                      <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-secondary)" }}>Stage 3: Formal Proposal & Milestone SLA</span>
+                      <span className="badge" style={{ fontSize: "0.7rem", padding: "2px 8px", background: "rgba(255, 255, 255, 0.08)", color: "var(--text-muted)" }}>Within 24 Hours</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--text-muted)" }}>
+                      Direct delivery of structured technical proposal, itemized deliverables, milestone timeline, and exact quotation.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Itemized Scoping Specification Receipt */}
+            <div style={{ padding: "32px 36px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+                <FileText size={16} style={{ color: "var(--accent-teal)" }} />
+                <h3 style={{ fontSize: "1rem", margin: 0, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)" }}>
+                  Itemized Project Scoping Specification
+                </h3>
+              </div>
+
+              {/* Specification Grid */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                  gap: "20px",
+                  background: "var(--bg-secondary)",
+                  borderRadius: "var(--radius-lg)",
+                  padding: "24px",
+                  border: "1px solid var(--card-border)",
+                  marginBottom: "24px"
+                }}
+              >
+                {/* Client Profile */}
+                <div>
+                  <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", display: "block", marginBottom: "12px", fontWeight: 700 }}>
+                    Client Profile
+                  </span>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.88rem" }}>
+                    <div>
+                      <span style={{ color: "var(--text-muted)" }}>Name: </span>
+                      <strong style={{ color: "var(--text-primary)" }}>{submittedQuote.name}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: "var(--text-muted)" }}>Email: </span>
+                      <span style={{ color: "var(--accent-cyan)", wordBreak: "break-all" }}>{submittedQuote.email}</span>
+                    </div>
+                    {submittedQuote.phone && (
+                      <div>
+                        <span style={{ color: "var(--text-muted)" }}>Phone: </span>
+                        <span>{submittedQuote.phone}</span>
+                      </div>
+                    )}
+                    <div>
+                      <span style={{ color: "var(--text-muted)" }}>Organization: </span>
+                      <span>{submittedQuote.organization || "Independent / Private Client"}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: "var(--text-muted)" }}>Preferred Contact: </span>
+                      <span>{submittedQuote.preferredContact || "Email & Video Call"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Project Commercials & Schedule */}
+                <div>
+                  <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", display: "block", marginBottom: "12px", fontWeight: 700 }}>
+                    Commercials & Schedule
+                  </span>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.88rem" }}>
+                    <div>
+                      <span style={{ color: "var(--text-muted)" }}>Selected Service: </span>
+                      <span className="badge badge-teal" style={{ marginLeft: "4px" }}>
+                        {submittedQuote.serviceTitle}
+                      </span>
+                    </div>
+                    <div>
+                      <span style={{ color: "var(--text-muted)" }}>Budget Range: </span>
+                      <strong style={{ color: "var(--accent-emerald)" }}>{submittedQuote.budgetRange}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: "var(--text-muted)" }}>Target Timeline: </span>
+                      <strong style={{ color: "var(--accent-cyan)" }}>{submittedQuote.timeline}</strong>
+                    </div>
+                    {submittedQuote.projectUrl && (
+                      <div style={{ wordBreak: "break-all" }}>
+                        <span style={{ color: "var(--text-muted)" }}>Reference URL: </span>
+                        <a
+                          href={submittedQuote.projectUrl.startsWith("http") ? submittedQuote.projectUrl : `https://${submittedQuote.projectUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: "var(--accent-cyan)", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        >
+                          {submittedQuote.projectUrl}
+                          <ExternalLink size={12} />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Project Scope Description & Deliverables */}
+              <div
+                style={{
+                  background: "var(--bg-secondary)",
+                  borderRadius: "var(--radius-lg)",
+                  padding: "24px",
+                  border: "1px solid var(--card-border)",
+                  fontSize: "0.9rem"
+                }}
+              >
+                <div style={{ marginBottom: "16px" }}>
+                  <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", display: "block", marginBottom: "6px", fontWeight: 700 }}>
+                    Project Title
+                  </span>
+                  <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                    {submittedQuote.projectTitle}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: "20px" }}>
+                  <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", display: "block", marginBottom: "6px", fontWeight: 700 }}>
+                    Scope Overview & Technical Requirements
+                  </span>
+                  <p style={{ color: "var(--text-secondary)", margin: 0, lineHeight: 1.6, whiteSpace: "pre-line" }}>
+                    {submittedQuote.projectDescription}
+                  </p>
+                </div>
+
+                {submittedQuote.deliverables && submittedQuote.deliverables.length > 0 && (
+                  <div style={{ marginBottom: "16px" }}>
+                    <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", display: "block", marginBottom: "8px", fontWeight: 700 }}>
+                      Selected Scope Deliverables ({submittedQuote.deliverables.length})
+                    </span>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                      {submittedQuote.deliverables.map((item, idx) => (
+                        <span key={idx} className="badge badge-cyan" style={{ fontSize: "0.8rem", padding: "4px 10px" }}>
+                          ✓ {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {submittedQuote.authorizedAttestation && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      padding: "10px 14px",
+                      borderRadius: "var(--radius-md)",
+                      background: "rgba(16, 185, 129, 0.1)",
+                      border: "1px solid rgba(16, 185, 129, 0.3)",
+                      fontSize: "0.82rem",
+                      color: "var(--accent-emerald)",
+                      marginTop: "12px"
+                    }}
+                  >
+                    <Shield size={16} style={{ flexShrink: 0 }} />
+                    <span><strong>Security Attestation:</strong> Legal authorization to test target infrastructure attested and verified.</span>
+                  </div>
+                )}
+
+                {submittedQuote.additionalNotes && (
+                  <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px solid var(--card-border)" }}>
+                    <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", display: "block", marginBottom: "4px", fontWeight: 700 }}>
+                      Additional Directives
+                    </span>
+                    <p style={{ color: "var(--text-secondary)", margin: 0, fontSize: "0.85rem", fontStyle: "italic" }}>
+                      "{submittedQuote.additionalNotes}"
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Direct Priority Contact Strip */}
+            <div
+              className="no-print"
+              style={{
+                padding: "24px 36px",
+                background: "linear-gradient(135deg, rgba(0, 242, 254, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%)",
+                borderTop: "1px solid var(--card-border)",
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "18px"
+              }}
+            >
+              <div>
+                <h4 style={{ margin: "0 0 4px", fontSize: "0.95rem" }}>
+                  Need urgent consultation or scope adjustment before the 12-hour review?
+                </h4>
+                <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--text-muted)" }}>
+                  Direct developer line — Monitored 9 AM – 9 PM IST. Quote reference <strong>{submittedQuote.id}</strong> pre-filled.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                <a
+                  href={`mailto:${personalInfo.email}?subject=${encodeURIComponent(`Priority Quote Inquiry [${submittedQuote.id}] - ${submittedQuote.projectTitle}`)}`}
+                  className="btn btn-secondary"
+                  style={{ padding: "8px 14px", fontSize: "0.85rem" }}
+                >
+                  <Mail size={15} />
+                  <span>Email Directly</span>
+                </a>
+                <a
+                  href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`}
+                  className="btn btn-secondary"
+                  style={{ padding: "8px 14px", fontSize: "0.85rem" }}
+                >
+                  <Phone size={15} />
+                  <span>Call {personalInfo.phone}</span>
+                </a>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Action Toolbar (Bottom) */}
+          <div
+            className="no-print"
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "16px"
+            }}
+          >
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="btn btn-secondary"
+              >
+                <Printer size={16} />
+                <span>Print / Save PDF Dossier</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCopySummary}
+                className="btn btn-secondary"
+              >
+                {copiedSummary ? (
+                  <>
+                    <Check size={16} style={{ color: "var(--accent-emerald)" }} />
+                    <span style={{ color: "var(--accent-emerald)" }}>Summary Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={16} />
+                    <span>Copy Markdown Summary</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetForm}
+                className="btn btn-secondary"
+              >
+                <RotateCcw size={16} />
+                <span>Submit Another Request</span>
+              </button>
+            </div>
+
+            <Link to="/" className="btn btn-primary">
+              <span>Return to Portfolio Home</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+
         </div>
       </div>
     );

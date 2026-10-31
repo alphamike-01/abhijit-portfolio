@@ -771,3 +771,80 @@ pre code {
   }
 }
 
+/* ==========================================================================
+   PRINT & QUOTE CONFIRMATION RECEIPT STYLES
+   ========================================================================== */
+
+.quote-receipt-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
+}
+
+.roadmap-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+}
+
+.roadmap-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: 36px;
+  bottom: -16px;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.roadmap-step.completed:not(:last-child)::after {
+  background: var(--accent-emerald);
+}
+
+@media print {
+  /* Hide interactive site chrome during print */
+  .navbar,
+  .footer,
+  .no-print,
+  .breadcrumbs,
+  .cookie-banner,
+  button:not(.print-keep),
+  .btn {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0b1120 !important;
+    font-size: 10.5pt !important;
+  }
+
+  .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .quote-receipt-card,
+  .card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    color: #0b1120 !important;
+    padding: 24px !important;
+  }
+
+  .quote-receipt-card * {
+    color: #0b1120 !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .print-header {
+    display: block !important;
+  }
+}
+
+
